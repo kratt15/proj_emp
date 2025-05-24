@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tableau de Bord - Gestion des Emplois du Temps</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .nav-link {
+        color: #333;
+      }
+      .nav-link.active {
+        background-color: #0d6efd !important;
+        color: white !important;
+      }
+      .tab-pane {
+        padding: 20px 0;
+      }
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+      .card {
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+      }
+      #successMessage,
+      #errorMessage {
+        display: none;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+      #successMessage {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      #errorMessage {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="#">Gestion des Emplois du Temps</a>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-header">Navigation</div>
+            <div
+              class="nav flex-column nav-pills p-3"
+              id="v-pills-tab"
+              role="tablist"
+            >
+              <button
+                class="nav-link active mb-2"
+                data-bs-toggle="pill"
+                data-bs-target="#emploi-temps"
+                role="tab"
+                aria-selected="true"
+              >
+                Emploi du Temps
+              </button>
+              <button
+                class="nav-link mb-2"
+                data-bs-toggle="pill"
+                data-bs-target="#etudiants"
+                role="tab"
+                aria-selected="false"
+              >
+                Étudiants et Modules
+              </button>
+              <button
+                class="nav-link mb-2"
+                data-bs-toggle="pill"
+                data-bs-target="#charges"
+                role="tab"
+                aria-selected="false"
+              >
+                Charges Horaires
+              </button>
+              <button
+                class="nav-link"
+                data-bs-toggle="pill"
+                data-bs-target="#ajouter-seance"
+                role="tab"
+                aria-selected="false"
+              >
+                Ajouter une Séance
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <div class="tab-content" id="v-pills-tabContent">
+            <!-- Emploi du temps -->
+            <div class="tab-pane fade show active" id="emploi-temps">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="h5 mb-0">Emploi du Temps</h2>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="classe-emploi" class="form-label"
+                      >Sélectionnez une classe :</label
+                    >
+                    <select class="form-select" id="classe-emploi">
+                      <option value="">Choisir une classe...</option>
+                    </select>
+                  </div>
+                  <div id="emploi-temps-content"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Étudiants et Modules -->
+            <div class="tab-pane fade" id="etudiants">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="h5 mb-0">Étudiants et Modules</h2>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="classe-details" class="form-label"
+                      >Sélectionnez une classe :</label
+                    >
+                    <select class="form-select" id="classe-details">
+                      <option value="">Choisir une classe...</option>
+                    </select>
+                  </div>
+                  <div id="classe-details-content"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charges Horaires -->
+            <div class="tab-pane fade" id="charges">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="h5 mb-0">Charges Horaires des Enseignants</h2>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container">
+                    <canvas id="chargesChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ajouter une Séance -->
+            <div class="tab-pane fade" id="ajouter-seance">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="h5 mb-0">Ajouter une nouvelle séance</h2>
+                </div>
+                <div class="card-body">
+                  <div id="successMessage"></div>
+                  <div id="errorMessage"></div>
+                  <div id="form-container"></div>
+                </div>
+              </div>
+
+              <!-- Emploi du temps sous le formulaire -->
+              <div class="card mt-4">
+                <div class="card-header">
+                  <h2 class="h5 mb-0">Emploi du Temps</h2>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="classe-emploi-seance" class="form-label"
+                      >Sélectionnez une classe :</label
+                    >
+                    <select class="form-select" id="classe-emploi-seance">
+                      <option value="">Choisir une classe...</option>
+                    </select>
+                  </div>
+                  <div id="emploi-temps-seance"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Charger les listes de classes
+        function chargerClasses() {
+          fetch("get_listes.php?type=classes")
+            .then((response) => response.json())
+            .then((classes) => {
+              ["classe-emploi", "classe-details"].forEach((id) => {
+                const select = document.getElementById(id);
+                select.innerHTML =
+                  '<option value="">Choisir une classe...</option>';
+                classes.forEach((classe) => {
+                  const option = document.createElement("option");
+                  option.value = classe.id;
+                  option.textContent = classe.nom;
+                  select.appendChild(option);
+                });
+              });
+            });
+        }
+
+        // Charger l'emploi du temps
+        document
+          .getElementById("classe-emploi")
+          .addEventListener("change", function () {
+            if (!this.value) return;
+            fetch("transformer_emploi.php?classe=" + this.value)
+              .then((response) => response.text())
+              .then((html) => {
+                document.getElementById("emploi-temps-content").innerHTML =
+                  html;
+              });
+          });
+
+        // Charger les détails de la classe
+        document
+          .getElementById("classe-details")
+          .addEventListener("change", function () {
+            if (!this.value) return;
+            fetch("transformer_classe.php?classe=" + this.value)
+              .then((response) => response.text())
+              .then((html) => {
+                document.getElementById("classe-details-content").innerHTML =
+                  html;
+              });
+          });
+
+        // Charger le graphique des charges horaires
+        function chargerGraphique() {
+          fetch("get_charges_horaires.php")
+            .then((response) => response.json())
+            .then((data) => {
+              const ctx = document
+                .getElementById("chargesChart")
+                .getContext("2d");
+              new Chart(ctx, {
+                type: "bar",
+                data: {
+                  labels: data.labels,
+                  datasets: [
+                    {
+                      label: "Heures par semaine",
+                      data: data.heures,
+                      backgroundColor: "rgba(54, 162, 235, 0.8)",
+                      borderColor: "rgba(54, 162, 235, 1)",
+                      borderWidth: 1,
+                    },
+                  ],
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      title: {
+                        display: true,
+                        text: "Heures",
+                      },
+                    },
+                  },
+                },
+              });
+            });
+        }
+
+        // Charger le formulaire d'ajout de séance
+        function chargerFormulaire() {
+          fetch("ajouter_seance.html")
+            .then((response) => response.text())
+            .then((html) => {
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, "text/html");
+              const formContent = doc.querySelector(".card");
+              document.getElementById("form-container").innerHTML =
+                formContent.outerHTML;
+
+              // Initialiser les listes du formulaire
+              Promise.all([
+                fetch("get_listes.php?type=classes").then((r) => r.json()),
+                fetch("get_listes.php?type=professeurs").then((r) => r.json()),
+                fetch("get_listes.php?type=modules").then((r) => r.json()),
+                fetch("get_listes.php?type=salles").then((r) => r.json()),
+              ]).then(([classes, profs, modules, salles]) => {
+                // Remplir la liste des classes
+                const selectClasse = document.getElementById("classe");
+                classes.forEach((classe) => {
+                  const option = document.createElement("option");
+                  option.value = classe.id;
+                  option.textContent = classe.nom;
+                  selectClasse.appendChild(option);
+                });
+
+                // Remplir la liste des professeurs
+                const selectProf = document.getElementById("professeur");
+                profs.forEach((prof) => {
+                  const option = document.createElement("option");
+                  option.value = prof.id;
+                  option.textContent = prof.nom;
+                  selectProf.appendChild(option);
+                });
+
+                // Remplir la liste des modules
+                const selectModule = document.getElementById("module");
+                modules.forEach((module) => {
+                  const option = document.createElement("option");
+                  option.value = module.id;
+                  option.textContent = module.nom;
+                  selectModule.appendChild(option);
+                });
+
+                // Remplir la liste des salles
+                const selectSalle = document.getElementById("salle");
+                salles.forEach((salle) => {
+                  const option = document.createElement("option");
+                  option.value = salle.id;
+                  option.textContent = salle.nom;
+                  selectSalle.appendChild(option);
+                });
+              });
+
+              // Gérer la soumission du formulaire
+              const seanceForm = document.getElementById("seanceForm");
+              const successMessage = document.getElementById("successMessage");
+              const errorMessage = document.getElementById("errorMessage");
+
+              if (seanceForm) {
+                seanceForm.addEventListener("submit", function (e) {
+                  e.preventDefault();
+
+                  // Masquer les messages précédents
+                  if (successMessage) successMessage.style.display = "none";
+                  if (errorMessage) errorMessage.style.display = "none";
+
+                  // Récupérer les données du formulaire
+                  const formData = new FormData(this);
+
+                  // Envoyer les données
+                  fetch("ajouter_seance.php", {
+                    method: "POST",
+                    body: formData,
+                  })
+                    .then((response) => response.json())
+                    .then((data) => {
+                      if (data.success) {
+                        if (successMessage) {
+                          successMessage.style.display = "block";
+                          successMessage.textContent = data.message;
+                        }
+                        seanceForm.reset();
+
+                        // Recharger l'emploi du temps si une classe est sélectionnée
+                        const classeEmploiSeance = document.getElementById(
+                          "classe-emploi-seance"
+                        );
+                        if (classeEmploiSeance && classeEmploiSeance.value) {
+                          fetch(
+                            "transformer_emploi.php?classe=" +
+                              classeEmploiSeance.value
+                          )
+                            .then((response) => response.text())
+                            .then((html) => {
+                              document.getElementById(
+                                "emploi-temps-seance"
+                              ).innerHTML = html;
+                            });
+                        }
+                      } else {
+                        if (errorMessage) {
+                          errorMessage.style.display = "block";
+                          errorMessage.textContent = data.message;
+                        }
+                      }
+                    })
+                    .catch((error) => {
+                      if (errorMessage) {
+                        errorMessage.style.display = "block";
+                        errorMessage.textContent =
+                          "Une erreur est survenue lors de l'enregistrement.";
+                      }
+                    });
+                });
+              }
+            });
+        }
+
+        // Initialisation
+        chargerClasses();
+        chargerGraphique();
+        chargerFormulaire();
+
+        // Gestion des onglets
+        document.querySelectorAll(".nav-link").forEach((tab) => {
+          tab.addEventListener("click", function () {
+            if (this.getAttribute("data-bs-target") === "#charges") {
+              chargerGraphique();
+            }
+          });
+        });
+
+        // Charger l'emploi du temps dans l'onglet ajout séance
+        document
+          .getElementById("classe-emploi-seance")
+          .addEventListener("change", function () {
+            if (!this.value) return;
+            fetch("transformer_emploi.php?classe=" + this.value)
+              .then((response) => response.text())
+              .then((html) => {
+                document.getElementById("emploi-temps-seance").innerHTML = html;
+              });
+          });
+
+        // Ajouter le chargement des classes pour l'emploi du temps dans l'onglet séance
+        fetch("get_listes.php?type=classes")
+          .then((response) => response.json())
+          .then((classes) => {
+            const select = document.getElementById("classe-emploi-seance");
+            select.innerHTML =
+              '<option value="">Choisir une classe...</option>';
+            classes.forEach((classe) => {
+              const option = document.createElement("option");
+              option.value = classe.id;
+              option.textContent = classe.nom;
+              select.appendChild(option);
+            });
+          });
+      });
+    </script>
+  </body>
+</html>

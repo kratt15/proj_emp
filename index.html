@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consultation des Emplois du Temps</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+      .select-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      select {
+        padding: 8px;
+        font-size: 16px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 200px;
+      }
+      #emploi-temps {
+        margin-top: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+      }
+      th {
+        background-color: #f8f9fa;
+        color: #333;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      .loading {
+        text-align: center;
+        padding: 20px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Consultation des Emplois du Temps</h1>
+
+      <div class="select-container">
+        <select id="classe-select" title="Sélection de la classe">
+          <option value="">Sélectionnez une classe</option>
+        </select>
+      </div>
+
+      <div class="loading" id="loading">Chargement en cours...</div>
+
+      <div id="emploi-temps"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Charger la liste des classes
+        fetch("get_classes.php")
+          .then((response) => response.json())
+          .then((classes) => {
+            const select = document.getElementById("classe-select");
+            classes.forEach((classe) => {
+              const option = document.createElement("option");
+              option.value = classe.id;
+              option.textContent = classe.nom;
+              select.appendChild(option);
+            });
+          });
+
+        // Gestionnaire d'événement pour le changement de classe
+        document
+          .getElementById("classe-select")
+          .addEventListener("change", function () {
+            const classeId = this.value;
+            if (!classeId) return;
+
+            const loading = document.getElementById("loading");
+            const emploiTemps = document.getElementById("emploi-temps");
+
+            loading.style.display = "block";
+            emploiTemps.innerHTML = "";
+
+            // Récupérer l'emploi du temps au format XML
+            fetch("generer_emploi.php?classe=" + classeId)
+              .then((response) => response.text())
+              .then((xmlStr) => {
+                loading.style.display = "none";
+
+                // Parser le XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+
+                // Créer le tableau HTML
+                let html = "<table>";
+                html +=
+                  "<tr><th>Jour</th><th>Début</th><th>Fin</th><th>Module</th><th>Professeur</th><th>Salle</th></tr>";
+
+                const seances = xmlDoc.getElementsByTagName("seance");
+                for (let seance of seances) {
+                  html += "<tr>";
+                  html += `<td>${seance.getAttribute("jour")}</td>`;
+                  html += `<td>${seance.getAttribute("debut")}</td>`;
+                  html += `<td>${seance.getAttribute("fin")}</td>`;
+                  html += `<td>${seance.getAttribute("module")}</td>`;
+                  html += `<td>${seance.getAttribute("prof")}</td>`;
+                  html += `<td>${seance.getAttribute("salle")}</td>`;
+                  html += "</tr>";
+                }
+
+                html += "</table>";
+                emploiTemps.innerHTML = html;
+              })
+              .catch((error) => {
+                loading.style.display = "none";
+                emploiTemps.innerHTML =
+                  '<p style="color: red;">Erreur lors du chargement de l\'emploi du temps.</p>';
+              });
+          });
+      });
+    </script>
+  </body>
+</html>
