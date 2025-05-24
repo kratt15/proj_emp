@@ -1,15 +1,9 @@
 <?php
-// Configuration de la base de données
-$host = 'localhost';
-$dbname = 'gestion_emploi_temps';
-$username = 'root';
-$password = '';
+require_once 'config.php';
+
+header('Content-Type: application/json');
 
 try {
-    // Connexion à la base de données
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
     // Requête pour calculer le total des heures par professeur
     $stmt = $pdo->query("
         SELECT 
@@ -24,7 +18,7 @@ try {
     ");
     
     // Récupération des résultats
-    $charges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $charges = $stmt->fetchAll();
     
     // Préparation des données pour Chart.js
     $data = [
@@ -37,15 +31,14 @@ try {
         $data['heures'][] = round($charge['total_heures'], 2);
     }
     
-    // Envoi de l'en-tête JSON
-    header('Content-Type: application/json');
-    
-    // Conversion et envoi des données en JSON
+    // Envoi des données en JSON
     echo json_encode($data);
     
 } catch(PDOException $e) {
-    // En cas d'erreur, on renvoie un JSON avec l'erreur
-    header('Content-Type: application/json');
     http_response_code(500);
-    echo json_encode(['error' => 'Erreur : ' . $e->getMessage()]);
-} 
+    echo json_encode([
+        'error' => true,
+        'message' => 'Erreur lors de la récupération des charges horaires : ' . $e->getMessage()
+    ]);
+}
+?> 

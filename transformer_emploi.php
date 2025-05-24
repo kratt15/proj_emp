@@ -1,23 +1,43 @@
 <?php
-// Vérification du paramètre classe
-$id_classe = isset($_GET['classe']) ? intval($_GET['classe']) : null;
+require_once 'config.php';
 
-if (!$id_classe) {
-    header('Content-Type: text/html; charset=utf-8');
+// Vérification du paramètre classe
+if (!isset($_GET['classe'])) {
     die('Veuillez spécifier une classe.');
 }
 
+$id_classe = intval($_GET['classe']);
+
 try {
-    // Création des objets XML et XSLT
+    // Génération du fichier XML
+    $xml_filename = 'emplois_xml/emploi_' . $id_classe . '.xml';
+    
+    // Si le fichier n'existe pas, on le génère
+    if (!file_exists($xml_filename)) {
+        require_once 'generer_emploi.php';
+    }
+    
+    // Vérification que le fichier existe et est lisible
+    if (!file_exists($xml_filename) || !is_readable($xml_filename)) {
+        throw new Exception('Impossible de lire le fichier XML.');
+    }
+    
+    // Chargement des fichiers XML et XSLT
     $xml = new DOMDocument();
     $xsl = new DOMDocument();
     
-    // Chargement du XML depuis l'URL du générateur
-    $xml_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/generer_emploi.php?classe=" . $id_classe;
-    $xml_content = file_get_contents($xml_url);
-    $xml->loadXML($xml_content);
+    // Chargement du XML
+    $xml_content = file_get_contents($xml_filename);
+    if (empty($xml_content)) {
+        throw new Exception('Le fichier XML est vide.');
+    }
     
-    // Chargement de la feuille XSLT
+    $loaded = $xml->loadXML($xml_content);
+    if (!$loaded) {
+        throw new Exception('Erreur lors du chargement du XML.');
+    }
+    
+    // Chargement du XSLT
     $xsl->load('emploi_temps.xsl');
     
     // Configuration du processeur XSLT
@@ -27,11 +47,23 @@ try {
     // Application de la transformation
     $html = $proc->transformToXML($xml);
     
+    if ($html === false) {
+        throw new Exception('Erreur lors de la transformation XSLT.');
+    }
+    
     // Envoi du résultat
-    header('Content-Type: text/html; charset=utf-8');
     echo $html;
     
 } catch (Exception $e) {
-    header('Content-Type: text/html; charset=utf-8');
-    echo '<div class="alert alert-danger">Une erreur est survenue : ' . htmlspecialchars($e->getMessage()) . '</div>';
-} 
+    // En cas d'erreur, afficher un message d'erreur formaté
+    echo '<div class="alert alert-danger">';
+    echo 'Erreur : ' . htmlspecialchars($e->getMessage());
+    echo '<br>Détails techniques pour le débogage :<br>';
+    echo 'Fichier XML : ' . htmlspecialchars($xml_filename) . '<br>';
+    if (isset($xml_content)) {
+        echo 'Contenu XML :<br>';
+        echo '<pre>' . htmlspecialchars($xml_content) . '</pre>';
+    }
+    echo '</div>';
+}
+?> 

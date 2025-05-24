@@ -1,19 +1,17 @@
 <?php
-// Configuration de la base de données
-$host = 'localhost';
-$dbname = 'gestion_emploi_temps';
-$username = 'root';
-$password = '';
+require_once 'config.php';
+
+header('Content-Type: application/json');
+
+if (!isset($_GET['classe'])) {
+    echo json_encode(['success' => false, 'message' => 'ID de classe non spécifié']);
+    exit;
+}
+
+$id_classe = intval($_GET['classe']);
 
 try {
-    // Connexion à la base de données
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // Récupération de l'ID de la classe depuis l'URL
-    $id_classe = isset($_GET['classe']) ? intval($_GET['classe']) : 1;
-    
-    // Requête pour obtenir les informations de la classe
+    // Récupération des informations de la classe
     $stmt_classe = $pdo->prepare("
         SELECT c.ID_CLASSE, f.NOM_FILIERE, c.NIVEAU 
         FROM classes c 
@@ -21,7 +19,22 @@ try {
         WHERE c.ID_CLASSE = ?
     ");
     $stmt_classe->execute([$id_classe]);
-    $classe_info = $stmt_classe->fetch(PDO::FETCH_ASSOC);
+    $classe_info = $stmt_classe->fetch();
+    
+    if (!$classe_info) {
+        echo json_encode(['success' => false, 'message' => 'Classe non trouvée']);
+        exit;
+    }
+    
+    // Création du document XML
+    $xml = new DOMDocument('1.0', 'UTF-8');
+    $xml->formatOutput = true;
+    
+    // Création de l'élément racine
+    $emploi = $xml->createElement('emploi');
+    $classe_nom = $classe_info['NOM_FILIERE'] . $classe_info['NIVEAU'];
+    $emploi->setAttribute('classe', $classe_nom);
+    $xml->appendChild($emploi);
     
     // Requête pour obtenir l'emploi du temps
     $stmt = $pdo->prepare("
@@ -50,18 +63,7 @@ try {
     ");
     $stmt->execute([$id_classe]);
     
-    // Création du document XML
-    $xml = new DOMDocument('1.0', 'UTF-8');
-    $xml->formatOutput = true;
-    
-    // Création de l'élément racine
-    $emploi = $xml->createElement('emploi');
-    $classe_nom = $classe_info['NOM_FILIERE'] . $classe_info['NIVEAU'];
-    $emploi->setAttribute('classe', $classe_nom);
-    $xml->appendChild($emploi);
-    
-    // Ajout des séances
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($row = $stmt->fetch()) {
         $seance = $xml->createElement('seance');
         $seance->setAttribute('jour', strtolower($row['JOUR']));
         $seance->setAttribute('debut', substr($row['debut'], 0, 5));
@@ -72,16 +74,35 @@ try {
         $emploi->appendChild($seance);
     }
     
-    // Définition de l'en-tête HTTP pour XML
-    header('Content-Type: application/xml; charset=utf-8');
+    // Création du dossier si nécessaire
+    if (!file_exists('emplois_xml')) {
+        mkdir('emplois_xml', 0777, true);
+    }
     
-    // Affichage du XML
-    echo $xml->saveXML();
+    // Sauvegarde du fichier XML
+    $filename = 'emplois_xml/emploi_' . $id_classe . '.xml';
+    if ($xml->save($filename)) {
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Fichier XML généré avec succès',
+            'filename' => $filename
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Erreur lors de la sauvegarde du fichier XML'
+        ]);
+    }
     
 } catch(PDOException $e) {
-    // En cas d'erreur, on renvoie un XML d'erreur
-    header('Content-Type: application/xml; charset=utf-8');
-    echo '<?xml version="1.0" encoding="UTF-8"?>';
-    echo '<erreur>Une erreur est survenue : ' . htmlspecialchars($e->getMessage()) . '</erreur>';
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Erreur de base de données : ' . $e->getMessage()
+    ]);
+} catch(Exception $e) {
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Erreur : ' . $e->getMessage()
+    ]);
 }
 ?> 

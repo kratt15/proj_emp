@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<emploi classe="GC2">
+  <seance jour="lundi" debut="15:49" fin="17:49" prof="M. ROBERT DOUSSEY" module="GES101" salle="Salle 102"/>
+  <seance jour="jeudi" debut="12:07" fin="13:05" prof="Dr. BERNARD AMOUZOUGAN" module="INFO101" salle="Salle 101"/>
+</emploi>

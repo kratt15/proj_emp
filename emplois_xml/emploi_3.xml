@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<emploi classe="GC1">
+  <seance jour="lundi" debut="10:59" fin="12:59" prof="Mme. RICHARD" module="MKT101" salle="Salle 101"/>
+  <seance jour="mardi" debut="09:00" fin="11:00" prof="M. ROBERT" module="GES101" salle="Salle 201"/>
+  <seance jour="vendredi" debut="11:55" fin="14:55" prof="M. ROBERT" module="GES101" salle="Salle 102"/>
+</emploi>

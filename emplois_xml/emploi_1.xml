@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<emploi classe="IRT1">
+  <seance jour="lundi" debut="08:00" fin="10:00" prof="Dr. BERNARD" module="INFO101" salle="Salle 101"/>
+  <seance jour="lundi" debut="10:15" fin="12:15" prof="Prof. PETIT AKUE" module="INFO102" salle="Salle 102"/>
+  <seance jour="vendredi" debut="11:37" fin="14:37" prof="Mme. RICHARD" module="INFO101" salle="Salle 202"/>
+  <seance jour="samedi" debut="14:44" fin="16:42" prof="Mme. RICHARD" module="INFO101" salle="Salle 102"/>
+</emploi>
