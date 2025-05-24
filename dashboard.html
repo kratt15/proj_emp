@@ -73,18 +73,9 @@
               <button
                 class="nav-link active mb-2"
                 data-bs-toggle="pill"
-                data-bs-target="#emploi-temps"
-                role="tab"
-                aria-selected="true"
-              >
-                Emploi du Temps
-              </button>
-              <button
-                class="nav-link mb-2"
-                data-bs-toggle="pill"
                 data-bs-target="#etudiants"
                 role="tab"
-                aria-selected="false"
+                aria-selected="true"
               >
                 Étudiants et Modules
               </button>
@@ -112,28 +103,8 @@
 
         <div class="col-md-9">
           <div class="tab-content" id="v-pills-tabContent">
-            <!-- Emploi du temps -->
-            <div class="tab-pane fade show active" id="emploi-temps">
-              <div class="card">
-                <div class="card-header">
-                  <h2 class="h5 mb-0">Emploi du Temps</h2>
-                </div>
-                <div class="card-body">
-                  <div class="mb-3">
-                    <label for="classe-emploi" class="form-label"
-                      >Sélectionnez une classe :</label
-                    >
-                    <select class="form-select" id="classe-emploi">
-                      <option value="">Choisir une classe...</option>
-                    </select>
-                  </div>
-                  <div id="emploi-temps-content"></div>
-                </div>
-              </div>
-            </div>
-
             <!-- Étudiants et Modules -->
-            <div class="tab-pane fade" id="etudiants">
+            <div class="tab-pane fade show active" id="etudiants">
               <div class="card">
                 <div class="card-header">
                   <h2 class="h5 mb-0">Étudiants et Modules</h2>
@@ -210,7 +181,7 @@
           fetch("get_listes.php?type=classes")
             .then((response) => response.json())
             .then((classes) => {
-              ["classe-emploi", "classe-details"].forEach((id) => {
+              ["classe-details", "classe-emploi-seance"].forEach((id) => {
                 const select = document.getElementById(id);
                 select.innerHTML =
                   '<option value="">Choisir une classe...</option>';
@@ -223,19 +194,6 @@
               });
             });
         }
-
-        // Charger l'emploi du temps
-        document
-          .getElementById("classe-emploi")
-          .addEventListener("change", function () {
-            if (!this.value) return;
-            fetch("transformer_emploi.php?classe=" + this.value)
-              .then((response) => response.text())
-              .then((html) => {
-                document.getElementById("emploi-temps-content").innerHTML =
-                  html;
-              });
-          });
 
         // Charger les détails de la classe
         document
@@ -433,21 +391,6 @@
               .then((html) => {
                 document.getElementById("emploi-temps-seance").innerHTML = html;
               });
-          });
-
-        // Ajouter le chargement des classes pour l'emploi du temps dans l'onglet séance
-        fetch("get_listes.php?type=classes")
-          .then((response) => response.json())
-          .then((classes) => {
-            const select = document.getElementById("classe-emploi-seance");
-            select.innerHTML =
-              '<option value="">Choisir une classe...</option>';
-            classes.forEach((classe) => {
-              const option = document.createElement("option");
-              option.value = classe.id;
-              option.textContent = classe.nom;
-              select.appendChild(option);
-            });
           });
       });
     </script>
