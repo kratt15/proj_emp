@@ -32,14 +32,15 @@ INSERT INTO salles (NOM_SALLE, DESCIPTION) VALUES
 INSERT INTO modules (ID_MODULE, NOM_MODULE, DESCRIPTION) VALUES
 ('INFO101', 'Programmation Java', 'Introduction à la programmation Java'),
 ('INFO102', 'Base de données', 'Conception et gestion des bases de données'),
+('INFO103', 'Web', 'Programmation web avec HTML, CSS et JavaScript'),
 ('GES101', 'Comptabilité', 'Principes fondamentaux de la comptabilité'),
 ('MKT101', 'Marketing digital', 'Stratégies de marketing numérique');
 
 -- Insertion des professeurs
 INSERT INTO professeurs (NOM_PROF, TEL) VALUES
 ('Dr. BERNARD', '0123456789'),
-('Prof. PETIT', '0234567890'),
-('M. ROBERT', '0345678901'),
+('Prof. PETIT AMOUZON', '0234567890'),
+('M. ROBERT KOFFI', '0345678901'),
 ('Mme. RICHARD', '0456789012');
 
 -- Insertion des cours
